@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="logo.png" alt="InvoiceFlow Logo" width="150">
+    <img src="frontend/public/logo.png" alt="InvoiceFlow Logo" width="150">
     <h1>Invoice & Billing System</h1>
     <p>A modern, full-stack invoice and billing management system built with React and Node.js</p>
 
