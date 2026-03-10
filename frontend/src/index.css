@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased selection:bg-brand-orange/30;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl shadow-brand-navy/5;
+  }
+  .modern-input {
+    @apply block w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-orange focus:ring-brand-orange sm:text-sm py-2.5 px-4 bg-white/50 backdrop-blur-sm transition-all duration-200;
+  }
+  .modern-button {
+    @apply inline-flex justify-center items-center rounded-xl bg-gradient-to-r from-brand-orange to-[#ff8c33] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-orange/30 hover:shadow-brand-orange/50 hover:-translate-y-0.5 transition-all duration-300 active:translate-y-0;
+  }
+}

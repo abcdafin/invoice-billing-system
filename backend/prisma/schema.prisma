@@ -1,0 +1,169 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PAID
+  PARTIAL
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  CREDIT_CARD
+  E_WALLET
+  CHEQUE
+  OTHER
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  name        String
+  companyName String?
+  logoUrl     String?
+  phone       String?
+  address     String?
+  timezone    String    @default("Asia/Jakarta")
+  currency    String    @default("IDR")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  clients     Client[]
+  products    Product[]
+  invoices    Invoice[]
+  recurringRules RecurringRule[]
+
+  @@map("users")
+}
+
+model Client {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  postalCode  String?
+  country     String    @default("Indonesia")
+  taxId       String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invoices    Invoice[]
+
+  @@map("clients")
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(15, 2)
+  unit        String    @default("pcs")
+  sku         String?
+  category    String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invoiceItems InvoiceItem[]
+
+  @@map("products")
+}
+
+model Invoice {
+  id              String    @id @default(uuid())
+  invoiceNumber   String
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId        String
+  client          Client    @relation(fields: [clientId], references: [id])
+  issueDate       DateTime  @db.Date
+  dueDate         DateTime  @db.Date
+  status          InvoiceStatus @default(DRAFT)
+  subtotal        Decimal   @default(0) @db.Decimal(15, 2)
+  taxAmount       Decimal   @default(0) @db.Decimal(15, 2)
+  discountAmount  Decimal   @default(0) @db.Decimal(15, 2)
+  total           Decimal   @default(0) @db.Decimal(15, 2)
+  notes           String?
+  terms           String?
+  currency        String    @default("IDR")
+  recurringId     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  items           InvoiceItem[]
+  payments        Payment[]
+  recurringRule   RecurringRule? @relation(fields: [recurringId], references: [id])
+
+  @@unique([userId, invoiceNumber])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String    @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product?  @relation(fields: [productId], references: [id])
+  description String
+  quantity    Decimal   @db.Decimal(10, 2)
+  unitPrice   Decimal   @db.Decimal(15, 2)
+  discount    Decimal   @default(0) @db.Decimal(5, 2)
+  taxRate     Decimal   @default(0) @db.Decimal(5, 2)
+  subtotal    Decimal   @db.Decimal(15, 2)
+  createdAt   DateTime  @default(now())
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  invoiceId     String
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(15, 2)
+  paymentDate   DateTime      @db.Date
+  paymentMethod PaymentMethod
+  reference     String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+model RecurringRule {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  frequency     String   // daily, weekly, monthly, yearly
+  intervalCount Int      @default(1)
+  nextDate      DateTime @db.Date
+  endDate       DateTime? @db.Date
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  invoices      Invoice[]
+
+  @@map("recurring_rules")
+}
